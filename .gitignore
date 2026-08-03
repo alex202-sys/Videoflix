@@ -1,0 +1,61 @@
+# ==========================================
+# Python & Virtual Environments
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ==========================================
+# Django Specific
+# ==========================================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/static/
+/staticfiles/
+/media/
+!/media/.gitkeep
+!/static/.gitkeep
+
+# ==========================================
+# Environment Variables & Secrets
+# ==========================================
+.env
+.env.local
+.env.*.local
+
+
+# ==========================================
+# Docker & Containers
+# ==========================================
+# Docker data volumes mounted locally
+postgres_data/
+redis_data/
+
+# ==========================================
+# IDEs & Editors
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Testing & Coverage
+# ==========================================
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/

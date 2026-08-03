@@ -1,0 +1,3 @@
+# backend.entrypoint.sh IMMER mit LF (Linux) speichern
+backend.entrypoint.sh text eol=lf
+*.sh text eol=lf
