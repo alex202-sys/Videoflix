@@ -57,7 +57,7 @@ def convert_480p(video_id):
     # Relativen Pfad für Django berechnen & im Model speichern
     relative_path = os.path.relpath(target_path, settings.MEDIA_ROOT)
     video.video_480p = relative_path
-    video.save()
+    video.save(update_fields=["video_480p"])
 
 
 # Variante für 720p und 1080p könnte ähnlich aussehen, z.B.:
@@ -88,7 +88,7 @@ def convert_720p(video_id):
 
     relative_path = os.path.relpath(target_path, settings.MEDIA_ROOT)
     video.video_720p = relative_path
-    video.save()
+    video.save(update_fields=["video_720p"])
 
 
 def convert_1080p(video_id):
@@ -118,4 +118,4 @@ def convert_1080p(video_id):
 
     relative_path = os.path.relpath(target_path, settings.MEDIA_ROOT)
     video.video_1080p = relative_path
-    video.save()
+    video.save(update_fields=["video_1080p"])
