@@ -8,6 +8,10 @@ class Video(models.Model):
     video_file = models.FileField(
         upload_to="videos/", blank=True, null=True, verbose_name="Video-file"
     )
+    # Neue Felder für konvertierte Versionen:
+    video_480p = models.FileField(upload_to="videos/", blank=True, null=True)
+    video_720p = models.FileField(upload_to="videos/", blank=True, null=True)
+    video_1080p = models.FileField(upload_to="videos/", blank=True, null=True)
 
     def __str__(self):
         return self.title

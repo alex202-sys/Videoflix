@@ -36,6 +36,26 @@ services:
       - db
       - redis
 
+  # DEIN NEUER WORKER SERVICE:
+  rqworker:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    env_file: .env
+    container_name: videoflix_worker
+    command: python manage.py rqworker default
+    volumes:
+      - .:/app
+      - ./media:/app/media
+      - videoflix_static:/app/static
+    environment:
+      - PYTHONUNBUFFERED=1
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - web
+      - redis
+
 volumes:
   postgres_data:
   redis_data:

@@ -48,6 +48,87 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# Ändere die Einstellungen für die Datenbak und Füge die Konfiguration für Redis und den RQ-Worker hinzu
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
+# Ersetze die DATABASES Einstellung
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("DB_NAME", default="videoflix_db"),
+        "USER": os.environ.get("DB_USER", default="videoflix_user"),
+        "PASSWORD": os.environ.get("DB_PASSWORD", default="supersecretpassword"),
+        "HOST": os.environ.get("DB_HOST", default="db"),
+        "PORT": os.environ.get("DB_PORT", default=5432),
+    }
+}
+
+# Füge die Konfiguration für Redis
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": os.environ.get("REDIS_LOCATION", default="redis://redis:6379/1"),
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "KEY_PREFIX": "videoflix",
+    }
+}
+# Füge die Konfiguration für RQ hinzu
+RQ_QUEUES = {
+    "default": {
+        "HOST": os.environ.get("REDIS_HOST", default="redis"),
+        "PORT": os.environ.get("REDIS_PORT", default=6379),
+        "DB": os.environ.get("REDIS_DB", default=0),
+        "DEFAULT_TIMEOUT": 900,
+        "REDIS_CLIENT_KWARGS": {},
+    },
+}
+# Füge die Konfiguration für RQ from https://github.com/rq/django-rq/blob/master/README.md
+# RQ_QUEUES = {
+#     # 'default': {
+#     #     'HOST': 'localhost',
+#     #     'PORT': 6379,
+#     #     'DB': 0,
+#     #     'USERNAME': 'some-user',
+#     #     'PASSWORD': 'some-password',
+#     #     'DEFAULT_TIMEOUT': 360,
+#     #     'DEFAULT_RESULT_TTL': 800,
+#     #     'REDIS_CLIENT_KWARGS': {    # Eventual additional Redis connection arguments
+#     #         'ssl_cert_reqs': None,
+#     #     },
+#     # },
+#     'with-sentinel': {
+#         'SENTINELS': [('localhost', 26736), ('localhost', 26737)],
+#         'MASTER_NAME': 'redismaster',
+#         'DB': 0,
+#         # Redis username/password
+#         'USERNAME': 'redis-user',
+#         'PASSWORD': 'secret',
+#         'SOCKET_TIMEOUT': 0.3,
+#         'CONNECTION_KWARGS': {  # Eventual additional Redis connection arguments
+#             'ssl': True
+#         },
+#         'SENTINEL_KWARGS': {    # Eventual Sentinel connection arguments
+#             # If Sentinel also has auth, username/password can be passed here
+#             'username': 'sentinel-user',
+#             'password': 'secret',
+#         },
+#     },
+#     'high': {
+#         'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379/0'),  # If you're on Heroku
+#         'DEFAULT_TIMEOUT': 500,
+#     },
+#     'low': {
+#         'HOST': 'localhost',
+#         'PORT': 6379,
+#         'DB': 0,
+#     }
+# }
+
+
 ROOT_URLCONF = "core.urls"
 
 TEMPLATES = [
@@ -70,43 +151,6 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-# Ersetze die DATABASES Einstellung
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME", default="videoflix_db"),
-        "USER": os.environ.get("DB_USER", default="videoflix_user"),
-        "PASSWORD": os.environ.get("DB_PASSWORD", default="supersecretpassword"),
-        "HOST": os.environ.get("DB_HOST", default="db"),
-        "PORT": os.environ.get("DB_PORT", default=5432),
-    }
-}
-
-# Füge die Konfiguration für Redis und RQ hinzu
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.environ.get("REDIS_LOCATION", default="redis://redis:6379/1"),
-        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
-        "KEY_PREFIX": "videoflix",
-    }
-}
-RQ_QUEUES = {
-    "default": {
-        "HOST": os.environ.get("REDIS_HOST", default="redis"),
-        "PORT": os.environ.get("REDIS_PORT", default=6379),
-        "DB": os.environ.get("REDIS_DB", default=0),
-        "DEFAULT_TIMEOUT": 900,
-        "REDIS_CLIENT_KWARGS": {},
-    },
-}
 
 
 # Password validation

@@ -1,16 +1,25 @@
 from .models import Video
-from content.tasks import convert_480p
+from content.tasks import convert_480p, convert_720p, convert_1080p
 import os
 from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
+import django_rq
+from django_rq import enqueue
 
 
 @receiver(post_save, sender=Video)
 def video_post_save(sender, instance, created, **kwargs):
+    print("VIDEO GESPEICHERT - TASK GESTARTET")
     print("Video post save signal triggered")
     if created:
         print("New video created:", instance.title)
-        convert_480p(instance.video_file.path)
+        # enqueue(convert_480p, instance.video_file.path)
+        # queue = django_rq.get_queue("default", autocommit=True)
+        # queue.enqueue(convert_480p, instance.video_file.path)
+        # django_rq.enqueue(convert_480p, instance.video_file.path)
+        django_rq.enqueue(convert_480p, instance.id)
+        django_rq.enqueue(convert_720p, instance.id)
+        # django_rq.enqueue(convert_1080p, instance.id)
 
 
 @receiver(post_delete, sender=Video)

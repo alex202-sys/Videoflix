@@ -6,4 +6,6 @@ class ContentConfig(AppConfig):
     name = "content"
 
     def ready(self):
-        from . import singals
+        # from . import singals
+        # from . import signals
+        import content.signals
