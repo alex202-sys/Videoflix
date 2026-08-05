@@ -7,3 +7,6 @@ from .models import Video
 class VideoAdmin(admin.ModelAdmin):
     list_display = ("id", "title", "upload_date")
     search_fields = ("title",)
+
+    class Media:
+        js = ("content/js/upload_progress.js",)

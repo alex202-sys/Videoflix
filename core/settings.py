@@ -82,7 +82,7 @@ RQ_QUEUES = {
         "HOST": os.environ.get("REDIS_HOST", default="redis"),
         "PORT": os.environ.get("REDIS_PORT", default=6379),
         "DB": os.environ.get("REDIS_DB", default=0),
-        "DEFAULT_TIMEOUT": 900,
+        "DEFAULT_TIMEOUT": 1800,  # 30 Minuten
         "REDIS_CLIENT_KWARGS": {},
     },
 }
@@ -196,3 +196,6 @@ MEDIA_ROOT = BASE_DIR / "media"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # STATICFILES_DIRS = [BASE_DIR / "static"] # KI
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 524288000
+FILE_UPLOAD_MAX_MEMORY_SIZE = 524288000
