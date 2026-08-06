@@ -1,5 +1,5 @@
 from .models import Video
-from content.tasks import convert_480p, convert_720p, convert_1080p
+from content.tasks import convert_480p, convert_720p, convert_1080p, convert_HLS
 import os
 from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
@@ -21,6 +21,7 @@ def video_post_save(sender, instance, created, **kwargs):
         print("Video post 720p signal saved")
         django_rq.enqueue(convert_1080p, instance.id)
         print("Video post 1080p signal saved")
+        django_rq.enqueue(convert_HLS, instance.id)
 
 
 @receiver(post_delete, sender=Video)

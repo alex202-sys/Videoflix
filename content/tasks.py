@@ -119,3 +119,41 @@ def convert_1080p(video_id):
     relative_path = os.path.relpath(target_path, settings.MEDIA_ROOT)
     video.video_1080p = relative_path
     video.save(update_fields=["video_1080p"])
+
+
+def convert_HLS(video_id):
+    Video = apps.get_model("content", "Video")
+    video = Video.objects.get(pk=video_id)
+
+    source_path = video.video_file.path
+    base_path, _ = os.path.splitext(source_path)
+
+    output_dir = f"{base_path}_hls"
+    os.makedirs(output_dir, exist_ok=True)
+    target_m3u8 = os.path.join(output_dir, "index.m3u8")
+    segment_pattern = os.path.join(output_dir, "segment_%03d.ts")
+
+    cmd = [
+        "ffmpeg",
+        "-i",
+        source_path,
+        "-codec",
+        "copy",
+        "-start_number",
+        "0",
+        "-hls_time",
+        "10",
+        "-hls_list_size",
+        "0",
+        "-hls_segment_filename",
+        segment_pattern,
+        "-f",
+        "hls",
+        target_m3u8,
+    ]
+    subprocess.run(cmd, check=True)
+
+    relative_path = os.path.relpath(target_m3u8, settings.MEDIA_ROOT)
+    video.refresh_from_db()
+    video.video_hls = relative_path
+    video.save(update_fields=["video_hls"])
