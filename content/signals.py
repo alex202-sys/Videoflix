@@ -22,6 +22,7 @@ def video_post_save(sender, instance, created, **kwargs):
         django_rq.enqueue(convert_1080p, instance.id)
         print("Video post 1080p signal saved")
         django_rq.enqueue(convert_HLS, instance.id)
+        print("Video post HLS signal saved")
 
 
 @receiver(post_delete, sender=Video)

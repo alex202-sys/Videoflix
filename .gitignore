@@ -59,3 +59,9 @@ Thumbs.db
 htmlcov/
 .pytest_cache/
 .mypy_cache/
+
+# ==========================================
+# Frontend & Build Tools
+# ==========================================
+frontend/
+/frontend/
