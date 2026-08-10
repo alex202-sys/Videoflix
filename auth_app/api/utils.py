@@ -13,7 +13,11 @@ def generate_user_token(user):
 
 def send_activation_email(user, domain="localhost:8000"):
     uid, token = generate_user_token(user)
-    activation_link = f"http://{domain}/api/activate/{uid}/{token}/"
+
+    activation_link = (
+        f"{settings.FRONTEND_URL}/pages/auth/activate.html?uid={uid}&token={token}"
+    )
+
     send_mail(
         "Activate account.",
         f"Please activate your account: {activation_link}",
@@ -25,7 +29,7 @@ def send_activation_email(user, domain="localhost:8000"):
 
 def send_password_reset_email(user, domain="localhost:8000"):
     uid, token = generate_user_token(user)
-    reset_link = f"http://{domain}/api/password_confirm/{uid}/{token}/"
+    reset_link = f"{settings.FRONTEND_URL}/pages/auth/password_confirm.html?uid={uid}&token={token}"
     send_mail(
         "Reset password",
         f"Use this link to reset your password: {reset_link}",

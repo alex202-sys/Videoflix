@@ -1,44 +1,49 @@
-from .models import Video
-from content.tasks import convert_480p, convert_720p, convert_1080p, convert_HLS
-import os
+from core import settings
 from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
 import django_rq
-from django_rq import enqueue
+import shutil
+import os
+from .tasks import convert_video_to_hls
+from .models import Video
 
 
 @receiver(post_save, sender=Video)
 def video_post_save(sender, instance, created, **kwargs):
-    print("VIDEO GESPEICHERT - TASK GESTARTET")
     if created:
-        # enqueue(convert_480p, instance.video_file.path)
-        # queue = django_rq.get_queue("default", autocommit=True)
-        # queue.enqueue(convert_480p, instance.video_file.path)
-        # django_rq.enqueue(convert_480p, instance.video_file.path)
-        django_rq.enqueue(convert_480p, instance.id)
-        print("Video post 480p signal saved")
-        django_rq.enqueue(convert_720p, instance.id)
-        print("Video post 720p signal saved")
-        django_rq.enqueue(convert_1080p, instance.id)
-        print("Video post 1080p signal saved")
-        django_rq.enqueue(convert_HLS, instance.id)
-        print("Video post HLS signal saved")
+        django_rq.enqueue(convert_video_to_hls, instance.id, job_timeout=3600)
 
 
 @receiver(post_delete, sender=Video)
 def auto_delete_file_on_delete(sender, instance, **kwargs):
+    """
+    Deletes the entire HLS folder (media/hls/<id>/), including all
+    subfolders (480p, 720p, 1080p) and all MP4 files, when deleting
+    via the admin interface.
+    """
 
-    if instance.video_file and os.path.isfile(instance.video_file.path):
-        os.remove(instance.video_file.path)
-    base_path, _ = os.path.splitext(instance.video_file.path)
-    resolutions = ["480p", "720p", "1080p"]
+    hls_main_dir = os.path.join(settings.MEDIA_ROOT, "hls", str(instance.id))
+    if os.path.exists(hls_main_dir) and "media" in hls_main_dir:
+        try:
+            shutil.rmtree(hls_main_dir)
+        except Exception as e:
+            print(f"Error deleting HLS folder {hls_main_dir}: {e}")
 
-    for res in resolutions:
-        converted_file_path = f"{base_path}_{res}.mp4"
-        if os.path.isfile(converted_file_path):
-            os.remove(converted_file_path)
+    # # 2. Thumbnail .jpg deleted (z.B. media/thumbnails/video_44.jpg)
+    # if instance.thumbnail and os.path.isfile(instance.thumbnail.path):
+    #     try:
+    #         os.remove(instance.thumbnail.path)
+    #     except Exception as e:
+    #         print(f"Fehler beim Löschen des Thumbnails: {e}")
 
-    for field_name in ["video_480p", "video_720p", "video_1080p"]:
-        field = getattr(instance, field_name, None)
-        if field and hasattr(field, "path") and os.path.isfile(field.path):
-            os.remove(field.path)
+    fields_to_clean = [
+        instance.video_file,
+        instance.video_hls,
+        instance.thumbnail,
+    ]
+    for field in fields_to_clean:
+        if field and field.name and os.path.isfile(field.path):
+            try:
+                os.remove(field.path)
+            except Exception as e:
+                print(f"Error deleting file {field.path}: {e}")

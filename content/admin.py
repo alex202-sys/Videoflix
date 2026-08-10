@@ -2,11 +2,19 @@ from django.contrib import admin
 from .models import Video
 
 
-# Register your models here.
 @admin.register(Video)
 class VideoAdmin(admin.ModelAdmin):
-    list_display = ("id", "title", "upload_date")
+    list_display = ("id", "title", "category", "created_at")
     search_fields = ("title",)
+
+    fields = (
+        "title",
+        "description",
+        "category",
+        "video_file",
+        "thumbnail",
+        "video_hls",
+    )
 
     class Media:
         js = ("content/js/upload_progress.js",)

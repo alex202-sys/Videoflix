@@ -1,159 +1,123 @@
 from core import settings
 from django.apps import apps
+from content.models import Video
 import subprocess
 import os
 
-# def convert_480p(source_file_path):
-#     # Beispiel: /app/media/videos/mein_video.mp4 -> /app/media/videos/mein_video_480p.mp4
-#     base_path, _ = os.path.splitext(source_file_path)
-#     target = f"{base_path}_480p.mp4"
-
-#     # Als Liste definieren & '-y' erzwingt das Überschreiben ohne Hängenbleiben
-#     cmd = [
-#         "ffmpeg",
-#         "-y",
-#         "-i",
-#         source_file_path,
-#         "-vf",
-#         "scale=-2:480",  # -2 stellt sicher, dass Breite & Höhe durch 2 teilbar sind (Standard für H.264/MP4)
-#         "-c:v",
-#         "libx264",  # x264 ist moderner und kompatibler als mpeg4
-#         "-crf",
-#         "23",
-#         "-c:a",
-#         "aac",
-#         target,
-#     ]
-
-#     subprocess.run(cmd, check=True)
-
-
-def convert_480p(video_id):
-    Video = apps.get_model("content", "Video")
-    video = Video.objects.get(pk=video_id)
-
-    source_path = video.video_file.path
-    base_path, _ = os.path.splitext(source_path)
-    target_path = f"{base_path}_480p.mp4"
-
-    # FFmpeg Ausführung
-    cmd = [
-        "ffmpeg",
-        "-y",
-        "-i",
-        source_path,
-        "-vf",
-        "scale=-2:480",
-        "-c:v",
-        "libx264",
-        "-crf",
-        "23",
-        "-c:a",
-        "aac",
-        target_path,
-    ]
-    subprocess.run(cmd, check=True)
-
-    # Relativen Pfad für Django berechnen & im Model speichern
-    relative_path = os.path.relpath(target_path, settings.MEDIA_ROOT)
-    video.video_480p = relative_path
-    video.save(update_fields=["video_480p"])
+# Auflösungskonfigurationen (Höhe, Video-Bitrate, Audio-Bitrate)
+RESOLUTIONS = {
+    # "144p": {
+    #     "scale": "scale=-2:144",
+    #     "bitrate": "300k",
+    #     "audio_bitrate": "64k",
+    # },
+    # "240p": {
+    #     "scale": "scale=-2:240",
+    #     "bitrate": "400k",
+    #     "audio_bitrate": "64k",
+    # },
+    "480p": {
+        "scale": "scale=-2:480",
+        "bitrate": "800k",
+        "audio_bitrate": "96k",
+    },
+    "720p": {
+        "scale": "scale=-2:720",
+        "bitrate": "2500k",
+        "audio_bitrate": "128k",
+    },
+    "1080p": {
+        "scale": "scale=-2:1080",
+        "bitrate": "5000k",
+        "audio_bitrate": "192k",
+    },
+}
 
 
-# Variante für 720p und 1080p könnte ähnlich aussehen, z.B.:
-def convert_720p(video_id):
-    Video = apps.get_model("content", "Video")
-    video = Video.objects.get(pk=video_id)
+def convert_video_to_hls(video_id):
+    """
+    Creates actual resolution subfolders for an uploaded video
+    under media/hls/<video_id>/<resolution>/ containing index.m3u8 and .ts segments,
+    as well as automatically generating a thumbnail (screenshot) at the 1-second mark.
+    """
+    try:
+        video = Video.objects.get(id=video_id)
+    except Video.DoesNotExist:
+        return
 
     source_path = video.video_file.path
-    base_path, _ = os.path.splitext(source_path)
-    target_path = f"{base_path}_720p.mp4"
 
-    cmd = [
-        "ffmpeg",
-        "-y",
-        "-i",
-        source_path,
-        "-vf",
-        "scale=-2:720",
-        "-c:v",
-        "libx264",
-        "-crf",
-        "23",
-        "-c:a",
-        "aac",
-        target_path,
-    ]
-    subprocess.run(cmd, check=True)
+    # ==========================================
+    # 1. THUMBNAIL GENERIEREN (Screenshot bei 00:00:01)
+    # ==========================================
+    try:
+        thumbnail_dir = os.path.join(settings.MEDIA_ROOT, "thumbnails")
+        os.makedirs(thumbnail_dir, exist_ok=True)
 
-    relative_path = os.path.relpath(target_path, settings.MEDIA_ROOT)
-    video.video_720p = relative_path
-    video.save(update_fields=["video_720p"])
+        thumbnail_filename = f"video_{video.id}.jpg"
+        thumbnail_path = os.path.join(thumbnail_dir, thumbnail_filename)
 
+        cmd_thumb = [
+            "ffmpeg",
+            "-ss",
+            "00:00:01",  # Zeitpunkt 1 Sekunde
+            "-i",
+            source_path,  # Input Video
+            "-vframes",
+            "1",  # Genau 1 Frame
+            "-q:v",
+            "2",  # Good JPG quality (1-31, 2 is very high))
+            "-y",  # Force overwrite
+            thumbnail_path,
+        ]
+        subprocess.run(cmd_thumb, check=True)
 
-def convert_1080p(video_id):
-    Video = apps.get_model("content", "Video")
-    video = Video.objects.get(pk=video_id)
+        video.thumbnail = f"thumbnails/{thumbnail_filename}"
+        video.save(update_fields=["thumbnail"])
+    except Exception as e:
+        print(f"Fehler beim Erstellen des Thumbnails für Video {video_id}: {e}")
 
-    source_path = video.video_file.path
-    base_path, _ = os.path.splitext(source_path)
-    target_path = f"{base_path}_1080p.mp4"
+    # ==========================================
+    # 2. HLS CONVERSION (Your existing logic)
+    # ==========================================
+    base_hls_dir = os.path.join(settings.MEDIA_ROOT, "hls", str(video.id))
 
-    cmd = [
-        "ffmpeg",
-        "-y",
-        "-i",
-        source_path,
-        "-vf",
-        "scale=-2:1080",
-        "-c:v",
-        "libx264",
-        "-crf",
-        "23",
-        "-c:a",
-        "aac",
-        target_path,
-    ]
-    subprocess.run(cmd, check=True)
+    for res_name, config in RESOLUTIONS.items():
+        # Create subfolders for the respective resolution (e.g., media/hls/29/480p)
+        res_dir = os.path.join(base_hls_dir, res_name)
+        os.makedirs(res_dir, exist_ok=True)
 
-    relative_path = os.path.relpath(target_path, settings.MEDIA_ROOT)
-    video.video_1080p = relative_path
-    video.save(update_fields=["video_1080p"])
+        m3u8_output = os.path.join(res_dir, "index.m3u8")
+        segment_pattern = os.path.join(res_dir, "segment_%03d.ts")
 
+        cmd_hls = [
+            "ffmpeg",
+            "-i",
+            source_path,
+            "-vf",
+            config["scale"],
+            "-c:v",
+            "libx264",
+            "-b:v",
+            config["bitrate"],
+            "-c:a",
+            "aac",
+            "-b:a",
+            config["audio_bitrate"],
+            "-hls_time",
+            "6",
+            "-hls_playlist_type",
+            "vod",
+            "-hls_segment_filename",
+            segment_pattern,
+            "-y",
+            m3u8_output,
+        ]
+        subprocess.run(cmd_hls, check=True)
 
-def convert_HLS(video_id):
-    Video = apps.get_model("content", "Video")
-    video = Video.objects.get(pk=video_id)
-
-    source_path = video.video_file.path
-    base_path, _ = os.path.splitext(source_path)
-
-    output_dir = f"{base_path}_hls"
-    os.makedirs(output_dir, exist_ok=True)
-    target_m3u8 = os.path.join(output_dir, "index.m3u8")
-    segment_pattern = os.path.join(output_dir, "segment_%03d.ts")
-
-    cmd = [
-        "ffmpeg",
-        "-i",
-        source_path,
-        "-codec",
-        "copy",
-        "-start_number",
-        "0",
-        "-hls_time",
-        "10",
-        "-hls_list_size",
-        "0",
-        "-hls_segment_filename",
-        segment_pattern,
-        "-f",
-        "hls",
-        target_m3u8,
-    ]
-    subprocess.run(cmd, check=True)
-
-    relative_path = os.path.relpath(target_m3u8, settings.MEDIA_ROOT)
-    video.refresh_from_db()
-    video.video_hls = relative_path
-    video.save(update_fields=["video_hls"])
+    # 3. Save reference for video_hls (relative path to the 720p version)
+    rel_hls_path = os.path.relpath(
+        os.path.join(base_hls_dir, "720p", "index.m3u8"), settings.MEDIA_ROOT
+    )
+    video.video_hls = rel_hls_path
+    video.save()

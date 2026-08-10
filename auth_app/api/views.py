@@ -3,6 +3,7 @@ from django.contrib.auth.tokens import default_token_generator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
+from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from .permissions import HasRefreshTokenCookie
 
@@ -27,8 +28,7 @@ class RegisterView(APIView):
             try:
                 token = send_activation_email(user)
             except Exception as e:
-                # Logge den Fehler, aber lass den User-Creation-Prozess nicht crashen
-                print(f"E-Mail-Versand fehlgeschlagen: {e}")
+                print(f"Email sending failed: {e}")
                 token = None
 
             return Response(
@@ -81,6 +81,9 @@ class LoginView(APIView):
             )
 
         refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+
         response = Response(
             {
                 "detail": "Login successful",
@@ -88,17 +91,28 @@ class LoginView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
         response.set_cookie(
-            "access_token", str(refresh.access_token), httponly=True, samesite="Lax"
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            samesite="Lax",
+            secure=False,
         )
+
         response.set_cookie(
-            "refresh_token", str(refresh), httponly=True, samesite="Lax"
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            samesite="Lax",
+            secure=False,
         )
+
         return response
 
 
 class LogoutView(APIView):
-    permission_classes = [HasRefreshTokenCookie]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         refresh_token = request.COOKIES.get("refresh_token")
@@ -125,8 +139,8 @@ class LogoutView(APIView):
 
 
 class CookieTokenRefreshView(APIView):
-    # permission_classes = [permissions.AllowAny]
-    permission_classes = [HasRefreshTokenCookie]
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         refresh_token = request.COOKIES.get("refresh_token")

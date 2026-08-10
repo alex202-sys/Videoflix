@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from datetime import timedelta
 
 load_dotenv()
 
@@ -60,14 +61,6 @@ REST_FRAMEWORK = {
 }
 
 
-# Ändere die Einstellungen für die Datenbak und Füge die Konfiguration für Redis und den RQ-Worker hinzu
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-# Ersetze die DATABASES Einstellung
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -79,7 +72,7 @@ DATABASES = {
     }
 }
 
-# Füge die Konfiguration für Redis
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -88,7 +81,7 @@ CACHES = {
         "KEY_PREFIX": "videoflix",
     }
 }
-# Füge die Konfiguration für RQ hinzu
+
 RQ_QUEUES = {
     "default": {
         "HOST": os.environ.get("REDIS_HOST", default="redis"),
@@ -99,8 +92,7 @@ RQ_QUEUES = {
     },
 }
 
-# Add the following settings for Email configuration
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
 EMAIL_BACKEND = os.getenv(
     "EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend"
 )
@@ -116,50 +108,6 @@ DEFAULT_FROM_EMAIL = os.getenv(
     EMAIL_HOST_USER,
 )
 EMAIL_TIMEOUT = 10
-
-
-# Füge die Konfiguration für RQ from https://github.com/rq/django-rq/blob/master/README.md
-# RQ_QUEUES = {
-#     # 'default': {
-#     #     'HOST': 'localhost',
-#     #     'PORT': 6379,
-#     #     'DB': 0,
-#     #     'USERNAME': 'some-user',
-#     #     'PASSWORD': 'some-password',
-#     #     'DEFAULT_TIMEOUT': 360,
-#     #     'DEFAULT_RESULT_TTL': 800,
-#     #     'REDIS_CLIENT_KWARGS': {    # Eventual additional Redis connection arguments
-#     #         'ssl_cert_reqs': None,
-#     #     },
-#     # },
-#     'with-sentinel': {
-#         'SENTINELS': [('localhost', 26736), ('localhost', 26737)],
-#         'MASTER_NAME': 'redismaster',
-#         'DB': 0,
-#         # Redis username/password
-#         'USERNAME': 'redis-user',
-#         'PASSWORD': 'secret',
-#         'SOCKET_TIMEOUT': 0.3,
-#         'CONNECTION_KWARGS': {  # Eventual additional Redis connection arguments
-#             'ssl': True
-#         },
-#         'SENTINEL_KWARGS': {    # Eventual Sentinel connection arguments
-#             # If Sentinel also has auth, username/password can be passed here
-#             'username': 'sentinel-user',
-#             'password': 'secret',
-#         },
-#     },
-#     'high': {
-#         'URL': os.getenv('REDISTOGO_URL', 'redis://localhost:6379/0'),  # If you're on Heroku
-#         'DEFAULT_TIMEOUT': 500,
-#     },
-#     'low': {
-#         'HOST': 'localhost',
-#         'PORT': 6379,
-#         'DB': 0,
-#     }
-# }
-
 
 ROOT_URLCONF = "core.urls"
 
@@ -181,13 +129,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
-
-# Password validation
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -204,9 +145,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
-
 LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = "UTC"
@@ -216,20 +154,63 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
-
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "static"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
-# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# STATICFILES_DIRS = [BASE_DIR / "static"] # KI
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 524288000
-FILE_UPLOAD_MAX_MEMORY_SIZE = 524288000
+DATA_UPLOAD_MAX_MEMORY_SIZE = 536870912  # 512 MB in Bytes
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # Ab 10 MB direkt als Temp-Datei streamen
 
-CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+]
+
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+FRONTEND_URL = "http://127.0.0.1:5500"
+
+#
+SIMPLE_JWT = {
+    # Access Token auf 1 Tag setzen (statt 5 Minuten)
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
