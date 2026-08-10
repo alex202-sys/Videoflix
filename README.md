@@ -16,35 +16,69 @@ A high-performance video streaming backend platform built with **Django**, **Dja
 
 ---
 
-## Media Architecture & Folder Structure
+## Folder Structure & Media Architecture
 
 ```text
-media/
-├── hls/
-│   └── <video_id>/
-│       ├── 480p/       <-- index.m3u8 & segment_xxx.ts
-│       ├── 720p/
-│       └── 1080p/
-├── thumbnails/          <-- video_<video_id>.jpg
-└── videos/              <-- Original uploaded MP4 files
+videoflix/
+│
+├── content/                        # Django App for Video Management & Streaming
+│   ├── migrations/                 # Database Migration Files
+│   ├── static/
+│   │   └── content/
+│   │       └── js/
+│   │           └── upload_progress.js  # Custom Vanilla JS Admin Upload Progress Bar
+│   ├── __init__.py
+│   ├── admin.py                    # Custom Admin Configuration & Media Definitions
+│   ├── apps.py
+│   ├── models.py                   # Video Model & post_delete Cleanup Signals
+│   ├── serializers.py              # DRF Serializers for Video Data
+│   ├── tasks.py                    # FFmpeg HLS & Thumbnail Processing Tasks
+│   ├── urls.py                     # API Routing for Video Endpoints
+│   └── views.py                    # API Views (e.g., VideoStreamView, VideoListView)
+│
+├── media/                          # Uploaded & Generated Media Files (Git ignored)
+│   ├── hls/                        # Generated HLS Streams
+│   │   └── <video_id>/             # Subdirectory per Video ID
+│   │       ├── 480p/               # index.m3u8 & segment_000.ts files
+│   │       ├── 720p/
+│   │       └── 1080p/
+│   ├── thumbnails/                 # Extracted JPEG Previews (video_<video_id>.jpg)
+│   └── videos/                     # Original Uploaded MP4 Source Files
+│
+├── static/                         # Collected Static Files (via collectstatic)
+│
+├── core/                           # Django Core Project Configuration
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py                 # Core Settings (MEDIA_ROOT, RQ_QUEUES, etc.)
+│   ├── urls.py                     # Root URL Dispatcher
+│   └── wsgi.py
+│
+├── .env                            # Environment Variables (SECRET_KEY, DEBUG, etc.)
+├── .gitignore                      # Git Ignore Rules (media/, *.pyc, .env, etc.)
+├── Dockerfile                      # Container Build Instructions for Backend & Worker
+├── docker-compose.yml              # Services Orchestration (Backend, Worker, Redis)
+├── manage.py                       # Django CLI Utility
+├── README.md                       # Project Documentation
+└── requirements.txt                # Python Dependencies (Django, djangorestframework, django-rq, Pillow, etc.)
 ```
 
 
 
-## Installation & Setup (Backend)
+## Installation & Setup (Backend, Windows)
 
 ### Prerequisites
 
 - [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
-- [Git](https://git-scm.com/)
+- [Git](https://github.com/Developer-Akademie-Backendkurs/material.videoflix-docker-files/blob/main/.env.template)
 
 ### 1. Clone the Repository & Configure Environment Variables
 
 Bash
 
 ```
-mkdir videoflix_backend
-cd videoflix_backend
+mkdir videoflix
+cd videoflix
 git clone https://github.com/alex202-sys/Videoflix.git .
 ```
 
@@ -104,12 +138,12 @@ The CORS in settings.py have already been adjusted to work with frontend port 55
 
 ## Useful Commands
 
-| **Action**                     | **Command**                                                  |
-| ------------------------------ | ------------------------------------------------------------ |
-| **Stop containers**            | `docker compose down`                                        |
-| **Reset containers & volumes** | `docker compose down -v`                                     |
-| **View worker logs**           | `docker compose logs -f videoflix_worker`                    |
-| **Make database migrations**   | `docker compose exec videoflix_backend python manage.py makemigrations` |
+| **Action**                                  | **Command**                                                  |
+| ------------------------------------------- | ------------------------------------------------------------ |
+| **Stop containers**                         | `docker compose down`                                        |
+| **Reset containers & volumes**              | docker compose down -v`                                      |
+| **View worker logs**<br />**View web logs** | `docker compose logs -f videoflix_worker`<br />`docker compose logs -f web` |
+| **Make database migrations**                | `docker compose exec videoflix_backend python manage.py makemigrations` |
 
 ## License & Authors
 
