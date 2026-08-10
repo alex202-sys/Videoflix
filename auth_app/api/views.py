@@ -5,8 +5,6 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
-from .permissions import HasRefreshTokenCookie
-
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
@@ -19,6 +17,8 @@ User = get_user_model()
 
 
 class RegisterView(APIView):
+    """Handles user registration and sends an activation email."""
+
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -42,6 +42,8 @@ class RegisterView(APIView):
 
 
 class ActivateView(APIView):
+    """Handles account activation via a unique token sent to the user's email."""
+
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, uidb64, token):
@@ -60,6 +62,8 @@ class ActivateView(APIView):
 
 
 class LoginView(APIView):
+    """Handles user login and returns per Cookies JWT tokens."""
+
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -112,6 +116,8 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
+    """Handles user logout by blacklisting the refresh token and deleting cookies."""
+
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -139,7 +145,10 @@ class LogoutView(APIView):
 
 
 class CookieTokenRefreshView(APIView):
-    permission_classes = [AllowAny]
+    """Handles refreshing the access token using the refresh token stored in cookies."""
+
+    permission_classes = [permissions.AllowAny]
+    """Ignore expired access tokens."""
     authentication_classes = []
 
     def post(self, request):
@@ -168,6 +177,8 @@ class CookieTokenRefreshView(APIView):
 
 
 class PasswordResetView(APIView):
+    """Handles password reset requests by sending a reset email to the user."""
+
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -184,6 +195,9 @@ class PasswordResetView(APIView):
 
 
 class PasswordConfirmView(APIView):
+    """Handles password reset confirmation by validating the token and setting
+    the new password."""
+
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, uidb64, token):

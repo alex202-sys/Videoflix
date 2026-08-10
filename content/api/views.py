@@ -33,20 +33,15 @@ class VideoDetailView(RetrieveUpdateDestroyAPIView):
 
 
 class VideoStreamView(APIView):
+    """
+    GET /api/video/<pk>/stream/ - Streams the video file with support for HTTP Range requests.
+    """
+
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk, format=None):
         video = get_object_or_404(Video, pk=pk)
 
-        resolution = request.query_params.get("resolution", "original")
-
-        # if resolution == "480p" and video.video_480p:
-        #     selected_file = video.video_480p
-        # elif resolution == "720p" and video.video_720p:
-        #     selected_file = video.video_720p
-        # elif resolution == "1080p" and video.video_1080p:
-        #     selected_file = video.video_1080p
-        # else:
         selected_file = video.video_file
 
         if not selected_file or not selected_file.name:
@@ -103,6 +98,7 @@ class HLSResolutionPlaylistView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, movie_id, resolution=None, format=None):
+        """Retrieve the HLS playlist for the specified resolution."""
         video = get_object_or_404(Video, pk=movie_id)
 
         if not video.video_hls or not video.video_hls.name:
@@ -112,7 +108,6 @@ class HLSResolutionPlaylistView(APIView):
         # or adjusted to your file structure:
         # 1. Preferred path: subfolder media/hls/<movie_id>/<resolution>/index.m3u8
         base_dir = os.path.dirname(video.video_file.path) if video.video_file else ""
-        # playlist_path = os.path.join(base_dir, 'hls', str(movie_id), resolution, 'index.m3u8')
         playlist_path = os.path.join(
             base_dir, "hls", str(movie_id), resolution, "index.m3u8"
         )
