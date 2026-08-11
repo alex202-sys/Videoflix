@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; margin: 0; padding: 20px;">
+    <!-- LOGO BEREICH -->
+    <div style="margin-bottom: 25px; text-align: center;">
+      <img src="cid:videoflix_logo" alt="Videoflix Logo" style="height: 32px; width: auto; display: block; margin: 0 auto;" />
+    </div>
+
+    <p>Dear {{ username }},</p>
+    <p>
+      Thank you for registering with <strong>Videoflix</strong>. To complete your registration and verify your email address, please click the link below:
+    </p>
+
+    <p style="margin: 30px 0;">
+      <a href="{{ activation_link }}" style="background-color: #3f51b5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 20px; font-weight: bold; display: inline-block;">Activate account</a>
+    </p>
+
+    <p>If you did not create an account with us, please disregard this email.</p>
+
+    <p>
+      Best regards,<br />Your Videoflix Team.
+    </p>
+  </body>
+</html>
