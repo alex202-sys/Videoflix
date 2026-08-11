@@ -12,8 +12,6 @@ class VideoAdmin(admin.ModelAdmin):
         "description",
         "category",
         "video_file",
-        "thumbnail",
-        "video_hls",
     )
 
     class Media:
