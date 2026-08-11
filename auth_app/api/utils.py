@@ -4,8 +4,8 @@ from django.utils.encoding import force_bytes, force_str
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
-from email.mime.image import MIMEImage
 import os
+from email.mime.image import MIMEImage
 
 
 def generate_user_token(user):
@@ -55,7 +55,6 @@ def send_activation_email(user, domain="localhost:8000"):
     return token
 
 
-# def send_password_reset_email(user, uid, token):
 def send_password_reset_email(user, domain="localhost:8000"):
     """Sends a password reset email to the user with a unique reset link."""
     uid, token = generate_user_token(user)
