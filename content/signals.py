@@ -10,6 +10,11 @@ from .models import Video
 
 @receiver(post_save, sender=Video)
 def video_post_save(sender, instance, created, **kwargs):
+    """
+    Signal handler that triggers the video conversion to HLS format
+    when a new Video instance is created.
+    """
+
     if created:
         django_rq.enqueue(convert_video_to_hls, instance.id, job_timeout=3600)
 
@@ -28,13 +33,6 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
             shutil.rmtree(hls_main_dir)
         except Exception as e:
             print(f"Error deleting HLS folder {hls_main_dir}: {e}")
-
-    # # 2. Thumbnail .jpg deleted (z.B. media/thumbnails/video_44.jpg)
-    # if instance.thumbnail and os.path.isfile(instance.thumbnail.path):
-    #     try:
-    #         os.remove(instance.thumbnail.path)
-    #     except Exception as e:
-    #         print(f"Fehler beim Löschen des Thumbnails: {e}")
 
     fields_to_clean = [
         instance.video_file,

@@ -32,7 +32,7 @@ class VideoSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.thumbnail.url)
             return f"http://127.0.0.1:8000{obj.thumbnail.url}"
 
-        # Fallback: If no image has been generated yet -> default.jpg
+        """ Fallback: If no image has been generated, yet -> default.jpg """
         default_path = "/media/thumbnails/default.jpg"
         if request is not None:
             return request.build_absolute_uri(default_path)

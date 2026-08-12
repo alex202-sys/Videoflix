@@ -53,7 +53,6 @@ class VideoStreamView(APIView):
 
         file_size = os.path.getsize(file_path)
 
-        # HTTP 206 Partial Content
         range_header = request.META.get("HTTP_RANGE", "").strip()
         range_match = re.match(r"bytes=(\d+)-(\d+)?", range_header)
 

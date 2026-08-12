@@ -42,7 +42,10 @@ class RegisterView(APIView):
 
 
 class ActivateView(APIView):
-    """Handles account activation via a unique token sent to the user's email."""
+    """
+    Handles account activation via a unique token sent to the user's email.
+    Activates the user account if the provided token is valid.
+    """
 
     permission_classes = [permissions.AllowAny]
 
@@ -62,7 +65,7 @@ class ActivateView(APIView):
 
 
 class LoginView(APIView):
-    """Handles user login and returns per Cookies JWT tokens."""
+    """Handles user login and returns JWT tokens via cookies."""
 
     permission_classes = [permissions.AllowAny]
 

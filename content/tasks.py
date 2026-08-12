@@ -4,18 +4,7 @@ from content.models import Video
 import subprocess
 import os
 
-# Auflösungskonfigurationen (Höhe, Video-Bitrate, Audio-Bitrate)
 RESOLUTIONS = {
-    # "144p": {
-    #     "scale": "scale=-2:144",
-    #     "bitrate": "300k",
-    #     "audio_bitrate": "64k",
-    # },
-    # "240p": {
-    #     "scale": "scale=-2:240",
-    #     "bitrate": "400k",
-    #     "audio_bitrate": "64k",
-    # },
     "480p": {
         "scale": "scale=-2:480",
         "bitrate": "800k",
@@ -47,9 +36,6 @@ def convert_video_to_hls(video_id):
 
     source_path = video.video_file.path
 
-    # ==========================================
-    # 1. THUMBNAIL GENERIEREN (Screenshot bei 00:00:01)
-    # ==========================================
     try:
         thumbnail_dir = os.path.join(settings.MEDIA_ROOT, "thumbnails")
         os.makedirs(thumbnail_dir, exist_ok=True)
@@ -60,14 +46,14 @@ def convert_video_to_hls(video_id):
         cmd_thumb = [
             "ffmpeg",
             "-ss",
-            "00:00:01",  # Zeitpunkt 1 Sekunde
+            "00:00:01",
             "-i",
-            source_path,  # Input Video
+            source_path,
             "-vframes",
-            "1",  # Genau 1 Frame
+            "1",
             "-q:v",
-            "2",  # Good JPG quality (1-31, 2 is very high))
-            "-y",  # Force overwrite
+            "2",
+            "-y",
             thumbnail_path,
         ]
         subprocess.run(cmd_thumb, check=True)
@@ -77,13 +63,9 @@ def convert_video_to_hls(video_id):
     except Exception as e:
         print(f"Fehler beim Erstellen des Thumbnails für Video {video_id}: {e}")
 
-    # ==========================================
-    # 2. HLS CONVERSION (Your existing logic)
-    # ==========================================
     base_hls_dir = os.path.join(settings.MEDIA_ROOT, "hls", str(video.id))
 
     for res_name, config in RESOLUTIONS.items():
-        # Create subfolders for the respective resolution (e.g., media/hls/29/480p)
         res_dir = os.path.join(base_hls_dir, res_name)
         os.makedirs(res_dir, exist_ok=True)
 
@@ -115,7 +97,6 @@ def convert_video_to_hls(video_id):
         ]
         subprocess.run(cmd_hls, check=True)
 
-    # 3. Save reference for video_hls (relative path to the 720p version)
     rel_hls_path = os.path.relpath(
         os.path.join(base_hls_dir, "720p", "index.m3u8"), settings.MEDIA_ROOT
     )

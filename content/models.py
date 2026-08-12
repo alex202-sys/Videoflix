@@ -2,6 +2,8 @@ from django.db import models
 
 
 class Video(models.Model):
+    """Model representing a video."""
+
     title = models.CharField(max_length=255, verbose_name="Titel")
     description = models.TextField(blank=True, null=True, verbose_name="Description")
     category = models.CharField(
